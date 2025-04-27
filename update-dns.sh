@@ -106,11 +106,22 @@ echo "===== Cloud-init DNS setup finished =====" | tee -a /var/log/cloud-init-dn
 
 echo "Triggering Jenkins build..." | tee -a /var/log/cloud-init-dns.log
 
+JENKINS_USER="shapi"
+JENKINS_API_TOKEN="112c74f9d488c71b9debd2e85568517a57"  # NOT the job token!
+
+CRUMB=$(curl -s --user $JENKINS_USER:$JENKINS_API_TOKEN \
+  "$JENKINS_URL/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
+
+
 INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
   http://169.254.169.254/latest/meta-data/instance-id)
 
 JENKINS_URL="http://vpn.aws.cts.care/job/ofir/buildWithParameters"
 JENKINS_TOKEN="123123"
 
-curl -X POST "$JENKINS_URL?token=$JENKINS_TOKEN&ip_address=$IP_PUBLIC&instance_id=$INSTANCE_ID" \
-  | tee -a /var/log/cloud-init-dns.log 2>&1
+curl -X POST "$JENKINS_URL/buildWithParameters" \
+  --user $JENKINS_USER:$JENKINS_API_TOKEN \
+  -H "$CRUMB" \
+  --data-urlencode "ip_address=$IP_PUBLIC" \
+  --data-urlencode "instance_id=$INSTANCE_ID"
+
