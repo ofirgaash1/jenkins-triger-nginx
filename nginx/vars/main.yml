@@ -1,0 +1,4 @@
+---
+# vars file for nginx
+NGINX_PORT: 6789
+NGINX_STRING: "hello"

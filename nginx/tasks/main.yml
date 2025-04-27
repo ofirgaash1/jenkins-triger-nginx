@@ -1,0 +1,33 @@
+---
+# tasks file for nginx
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+
+
+    - name: Print the Nginx port from Consul
+      debug:
+        msg: "Nginx will run on port: {{ nginx_port }}"
+
+    - name: Deploy nginx.conf rendered with the selected port
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+      tags:
+        - deploy
+
+    - name: Deploy nginx.conf rendered with NGINX_STRING
+      template:
+        src: html.j2
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Nginx
+
+
